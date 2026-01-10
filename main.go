@@ -28,7 +28,6 @@ func main() {
 	var err error
 
 	dbURL := os.Getenv("DATABASE_URL")
-	log.Println("DATABASE_URL:", dbURL)
 
 	db, err = sql.Open("postgres", dbURL)
 	if err != nil {
