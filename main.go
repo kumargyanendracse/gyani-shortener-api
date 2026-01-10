@@ -11,14 +11,15 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+type ShortenRequest struct {
+	URL string `json:"url"`
+}
+
 func enableCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-}
-
-type ShortenRequest struct {
-	URL string `json:"url"`
 }
 
 var db *sql.DB
@@ -27,7 +28,7 @@ func main() {
 	var err error
 
 	dbURL := os.Getenv("DATABASE_URL")
-	log.Println("DATABASE_URL length:", dbURL)
+	log.Println("DATABASE_URL:", dbURL)
 
 	db, err = sql.Open("postgres", dbURL)
 	if err != nil {
@@ -37,7 +38,10 @@ func main() {
 	err = db.Ping()
 	if err != nil {
 		log.Println("DB ping error:", err)
+	} else {
+		log.Println("Connected to database")
 	}
+
 	http.HandleFunc("/shorten", shorten)
 	http.HandleFunc("/resolve", resolve)
 
@@ -56,16 +60,28 @@ func shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var link Link
-	json.NewDecoder(r.Body).Decode(&link)
+	var req ShortenRequest
+	json.NewDecoder(r.Body).Decode(&req)
 
-	_, err := db.Exec("INSERT INTO links (code, url) VALUES ($1,$2)", link.Code, link.URL)
+	if req.URL == "" {
+		http.Error(w, "URL is required", 400)
+		return
+	}
+
+	code := randString(6)
+
+	_, err := db.Exec(
+		"INSERT INTO links (code, url) VALUES ($1, $2)",
+		code, req.URL,
+	)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"code": link.Code})
+	json.NewEncoder(w).Encode(map[string]string{
+		"code": code,
+	})
 }
 
 func resolve(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +99,9 @@ func resolve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"url": url})
+	json.NewEncoder(w).Encode(map[string]string{
+		"url": url,
+	})
 }
 
 func randString(n int) string {
