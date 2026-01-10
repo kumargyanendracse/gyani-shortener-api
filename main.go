@@ -24,7 +24,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
+log.Println("DATABASE_URL length:", dbURL)
 
+	db, err = sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
 	http.HandleFunc("/shorten", shorten)
 	http.HandleFunc("/resolve", resolve)
 
