@@ -22,7 +22,7 @@ func main() {
 	var err error
 
 	dbURL := os.Getenv("DATABASE_URL")
-	log.Println("DATABASE_URL length:", len(dbURL))
+	log.Println("DATABASE_URL length:", dbURL)
 
 	db, err = sql.Open("postgres", dbURL)
 	if err != nil {
