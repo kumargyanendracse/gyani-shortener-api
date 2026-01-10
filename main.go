@@ -20,16 +20,18 @@ var db *sql.DB
 
 func main() {
 	var err error
-	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	
-log.Println("DATABASE_URL length:", dbURL)
+
+	dbURL := os.Getenv("DATABASE_URL")
+	log.Println("DATABASE_URL length:", len(dbURL))
 
 	db, err = sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Println("DB ping error:", err)
 	}
 	http.HandleFunc("/shorten", shorten)
 	http.HandleFunc("/resolve", resolve)
