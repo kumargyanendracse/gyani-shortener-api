@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: gyani-shortener-api
+    env: go
+    buildCommand: go mod tidy && go build -o app
+    startCommand: ./app
