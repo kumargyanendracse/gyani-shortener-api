@@ -11,6 +11,11 @@ import (
 
 	_ "github.com/lib/pq"
 )
+func enableCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
 
 type ShortenRequest struct {
 	URL string `json:"url"`
@@ -46,23 +51,29 @@ func main() {
 }
 
 func shorten(w http.ResponseWriter, r *http.Request) {
-	var req ShortenRequest
-	json.NewDecoder(r.Body).Decode(&req)
+	enableCORS(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 
-	code := randString(6)
+	var link Link
+	json.NewDecoder(r.Body).Decode(&link)
 
-	_, err := db.Exec("INSERT INTO links (code, url) VALUES ($1,$2)", code, req.URL)
+	_, err := db.Exec("INSERT INTO links (code, url) VALUES ($1,$2)", link.Code, link.URL)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"code": code,
-	})
+	json.NewEncoder(w).Encode(map[string]string{"code": link.Code})
 }
 
 func resolve(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	code := r.URL.Query().Get("code")
 
 	var url string
@@ -72,9 +83,7 @@ func resolve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"url": url,
-	})
+	json.NewEncoder(w).Encode(map[string]string{"url": url})
 }
 
 func randString(n int) string {
