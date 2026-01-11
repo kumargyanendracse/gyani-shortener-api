@@ -43,6 +43,8 @@ func main() {
 
 	http.HandleFunc("/shorten", shorten)
 	http.HandleFunc("/resolve", resolve)
+	http.HandleFunc("/log", createLog)
+	http.HandleFunc("/logs", getLogs)
 
 	port := os.Getenv("PORT")
 	if port == "" {
