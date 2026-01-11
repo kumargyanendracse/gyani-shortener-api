@@ -24,7 +24,7 @@ func createLog(w http.ResponseWriter, r *http.Request) {
 
 	var logData LogEntry
 	json.NewDecoder(r.Body).Decode(&logData)
-
+	metaJSON, _ := json.Marshal(logData.Metadata)
 	_, err := db.Exec(
 		`insert into logs(service,level,message,request_id,user_id,metadata)
 		 values($1,$2,$3,$4,$5,$6)`,
@@ -33,7 +33,7 @@ func createLog(w http.ResponseWriter, r *http.Request) {
 		logData.Message,
 		logData.RequestID,
 		logData.UserID,
-		logData.Metadata,
+		metaJSON,
 	)
 
 	if err != nil {
